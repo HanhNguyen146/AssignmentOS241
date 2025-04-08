@@ -89,40 +89,6 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int 
   return 0;
 }
 
-int vm_map_ram(struct pcb_t *caller, int addrstart, int addrend, int oldend,
-  int incpgnum, struct vm_rg_struct *area)
-{
-int pgn; // page number
-int fpn; // frame number
-int pte; // page table entry
-int i;
-int ret;
-
-for (i = 0; i < incpgnum; i++) {
-pgn = PAGING_ADDR_PGN((oldend) + i * PAGING_PAGESZ);  // tinh page number moi
-
-// lay frame trong tu ram
-ret = MEMPHY_get_freefp(caller->mram, &fpn);
-if (ret < 0) {
-printf("Out of physical memory - implement swap out if needed\n");
-return -1;
-}
-
-// Tạo page table entry
-pte = PAGING_SET_FPN(fpn);          // dat frame number
-pte = PAGING_SET_PRESENT(pte);      // danh dau trang hien tai
-pte = PAGING_SET_DIRTY(pte);        // danh dau la dirty (neu can)
-
-// ghi vao bang trang cua process
-caller->mm->pgd[pgn] = pte;
-}
-
-// cap nhat break pointer
-caller->mm->mmap->sbrk = addrend;
-
-return 0;
-}
-
 /*inc_vma_limit - increase vm area limits to reserve space for new variable
  *@caller: caller
  *@vmaid: ID vm area to alloc memory region
